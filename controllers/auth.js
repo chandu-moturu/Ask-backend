@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import users from '../models/auth.js'
+import asyncHandler from 'express-async-handler'
 
-export const signup = async(req,res)=>{
-    const {name,email,phone,password}=req.body;
+export const signup = asyncHandler(async(req,res)=>{
+    const {name,email,phone,password,pic}=req.body;
     try{
         const existinguser=await users.findOne({email});
         if(existinguser){
@@ -11,8 +12,9 @@ export const signup = async(req,res)=>{
             return res.status(404).json({message:'Email already exists...'})
 
         }
-        const hashedPassword = await bcrypt.hash(password,12)
-        const newUser = await users.create({name,email,phone,password:hashedPassword})
+        const salt = await bcrypt.genSalt(10)
+        const hashedPassword = await bcrypt.hash(password,salt)
+        const newUser = await users.create({name,email,phone,password:hashedPassword,pic})
         const token= jwt.sign({email:newUser.email,id:newUser._id},process.env.JWT_SECRET,{expiresIn:'1hr'});
         res.status(200).json({result:newUser,token})
         res.end()
@@ -20,9 +22,9 @@ export const signup = async(req,res)=>{
     catch(error){
         res.status(500)
     }
-}
+})
 
-export const login = async(req,res)=>{
+export const login = asyncHandler(async(req,res)=>{
     const {email,password}=req.body;
     try{
         const existinguser = await users.findOne({email});
@@ -35,6 +37,7 @@ export const login = async(req,res)=>{
             res.status(400).json({message:'Invalid credentials'})
             res.end()
         }
+        
         const token=jwt.sign({email:existinguser.email,id:existinguser._id},process.env.JWT_SECRET,{expiresIn:'1hr'});
         res.status(200).json({result:existinguser,token})
         res.end()
@@ -42,4 +45,4 @@ export const login = async(req,res)=>{
     catch(err){
         res.status(500)
     }
-}
+})

@@ -28,26 +28,23 @@ export const getAllQuestions = async(req,res)=>{
 
 export const deleteQuestion = async(req,res)=>{
     const {id:_id}=req.params;
-    try{
     if(!mongoose.Types.ObjectId.isValid(_id)){
-        res.status(404).json({message:'invalid id'})
-        res.end()
+        return res.status(404).send("question unavailable...");
     }
-    else{
-        await Questions.findByIdAndRemove({_id});
-        res.status(200).json({message:'deleted successfully'})
-        res.end()
-    }}
-    catch(err){
-        res.status(404).json({message:'deleted failed'})
-        res.end()
+    try{
+        await Questions.findByIdAndRemove(_id);
+        res.status(200).json({message:"Successfully deleted...."})
+    }
+    catch(error){
+        res.status(404).json({message: error.message})
+
     }
 }
 
-
 export const voteQuestion=async(req,res)=>{
     const {id:_id}=req.params;
-    const {value,userId}=req.body;
+    const {value}=req.body;
+    const userId = req.userId
     if(!mongoose.Types.ObjectId.isValid(_id)){
         res.status(404).json({message:'invalid id'})
         res.end()

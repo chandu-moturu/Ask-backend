@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 import users from '../models/auth.js'
+import asyncHandler from 'express-async-handler'
 
-export const getAllUsers = async(req,res)=>{
+export const getAllUsers = asyncHandler(async(req,res)=>{
+  
     try{
         const allUsers=await users.find({});
         const allUserDetails = []
@@ -15,25 +17,40 @@ export const getAllUsers = async(req,res)=>{
     }
     catch(error){
         res.status(404).json({message:'cannot get users'})
-       console.log("error in getallusers")
+        console.log("error in getallusers")
     }
-}
+})
 
-export const updateProfile=async(req,res)=>{
+export const updateProfile= asyncHandler(async(req,res)=>{
     const {id:_id}=req.params;
     const {name,about,tags}=req.body;
     if(!mongoose.Types.ObjectId.isValid(_id)){
         res.status(404).json({message:'user unavailable..'})
-        res.end()
+        
     }
     try{
         const updatedProfile =await users.findByIdAndUpdate(_id,{$set:{'name':name,'about':about,'tags':tags}},{new:true})
         res.status(200).json(updatedProfile)
-        res.end()
+        // res.send(updateProfile)
+    
     }
     catch(error){
         console.log("error in update profile")
         res.status(405).json({message:'no user found'})
         res.end()
     }
-}
+})
+
+export const allUsers = asyncHandler(async(req,res)=>{
+  const keyword = req.query.search
+    ? {
+        $or: [
+          { name: { $regex: req.query.search, $options: "i" } },
+          { email: { $regex: req.query.search, $options: "i" } },
+        ],
+      }
+    : {};
+  const users = await users.find(keyword).find({ _id: { $ne: req.user._id } });
+  res.send(users);
+  //
+})

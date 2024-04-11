@@ -37,13 +37,13 @@ export const deleteAnswer = async(req,res)=>{
         return res.status(404).json('invalid answerId')
     }
     if(!mongoose.Types.ObjectId.isValid(answerId)){
-        return res.status(404)
+        return res.status(404).send("Answer unavailable...")
     }
     updateNoOfQuestions(_id,noOfAnswers)
     try{
         await Questions.updateOne(
             {_id},
-            {$pull:{'answer':{id:answerId}}}
+            {$pull:{'answer':{_id:answerId}}}
         )
         res.status(200).json('answer deleted successfully')
     }
